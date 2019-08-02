@@ -3,6 +3,7 @@ package com.htmlism
 import scala.jdk.CollectionConverters._
 
 import io.netty.buffer.ByteBuf
+import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ ChannelHandlerAdapter, ChannelHandlerContext, ChannelInboundHandler, ChannelInboundHandlerAdapter, SimpleChannelInboundHandler }
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
@@ -10,7 +11,7 @@ import io.netty.util.ReferenceCountUtil
 import org.scalatest._
 
 object HandlerSpec {
-  val httpRequest: DefaultFullHttpRequest =
+  def httpRequest: DefaultFullHttpRequest =
     new DefaultFullHttpRequest(
       HttpVersion.HTTP_1_1,
       HttpMethod.GET,
@@ -121,7 +122,16 @@ class HandlerSpec extends FunSuite with Matchers {
     chn.readOutbound[String] shouldBe "hello 456"
   }
 
-  test("write http request, receive an http response") {
+  test("write an in-memory http request, receive an http response") {
+    val chn = new EmbeddedChannel(new HttpServerCodec, new HttpObjectAggregator(65536), HttpResponder)
+
+    chn.writeInbound(HandlerSpec.httpRequest) // inbound boolean intentionally not tested, given implementation
+
+    val res = chn.readOutboundHttp[HttpResponse]
+    res.status() shouldBe HttpResponseStatus.OK
+  }
+
+  test("write byte-buf-based http request, receive an http response") {
     val chn = new EmbeddedChannel(new HttpServerCodec, new HttpObjectAggregator(65536), HttpResponder)
 
     chn.writeInboundHttp(HandlerSpec.httpRequest) // inbound boolean intentionally not tested, given implementation
@@ -148,6 +158,7 @@ object IncrementOrPass extends ChannelInboundHandlerAdapter {
     }
 }
 
+@Sharable
 object HttpResponder extends SimpleChannelInboundHandler[FullHttpRequest] {
   def channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest): Unit = {
     val res = new DefaultFullHttpResponse(
@@ -162,6 +173,7 @@ object InboundNoopHandler extends SimpleChannelInboundHandler[AnyRef] {
   override def channelRead0(ctx: ChannelHandlerContext, msg: AnyRef): Unit = ()
 }
 
+@Sharable
 object EchoHandler extends ChannelInboundHandlerAdapter {
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
     println("echo handler sees " + msg)
