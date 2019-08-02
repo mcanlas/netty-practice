@@ -10,7 +10,7 @@ import io.netty.util.ReferenceCountUtil
 import org.scalatest._
 
 object HandlerSpec {
-  val httpRequest: FullHttpRequest =
+  val httpRequest: DefaultFullHttpRequest =
     new DefaultFullHttpRequest(
       HttpVersion.HTTP_1_1,
       HttpMethod.GET,
@@ -21,11 +21,20 @@ object HandlerSpec {
 class HandlerSpec extends FunSuite with Matchers {
   implicit class ChannelOps(chn: EmbeddedChannel) {
     def readOutboundHttp[A]: A = {
-      val decodingChannel = new EmbeddedChannel(new HttpResponseDecoder, new HttpObjectAggregator(65536), EchoHandler)
+      val decodingChannel = new EmbeddedChannel(new HttpResponseDecoder, EchoHandler)
+      println(decodingChannel.pipeline().names())
 
-      chn.outboundMessages().asScala.foreach { _ => decodingChannel.writeInbound(chn.readOutbound[ByteBuf]()) }
+      chn.outboundMessages().asScala.foreach { _ =>
+        println("writing...")
+
+        val thing = chn.readOutbound[AnyRef]()
+        println(thing)
+
+        decodingChannel.writeInbound(thing)
+      }
 
       val ret = decodingChannel.readOutbound[A]
+      println("after decoding sees " + ret)
 
       decodingChannel.finishAndReleaseAll()
 
@@ -33,6 +42,7 @@ class HandlerSpec extends FunSuite with Matchers {
     }
 
     def writeInboundHttp[A](x: A): Boolean = {
+      println("raw payload was " + x)
       val encodingChannel = new EmbeddedChannel(new HttpRequestEncoder)
 
       println {
@@ -40,6 +50,7 @@ class HandlerSpec extends FunSuite with Matchers {
       }
 
       val buf = encodingChannel.readOutbound[AnyRef]
+      println("encoded payload became " + buf)
 
       chn.writeInbound(buf)
     }
@@ -109,6 +120,15 @@ class HandlerSpec extends FunSuite with Matchers {
     chn.writeInbound(456) // inbound boolean intentionally not tested, given implementation
     chn.readOutbound[String] shouldBe "hello 456"
   }
+
+  test("write http request, receive an http response") {
+    val chn = new EmbeddedChannel(new HttpServerCodec, new HttpObjectAggregator(65536), HttpResponder)
+
+    chn.writeInboundHttp(HandlerSpec.httpRequest) // inbound boolean intentionally not tested, given implementation
+
+    val res = chn.readOutboundHttp[HttpResponse]
+    res.status() shouldBe HttpResponseStatus.OK
+  }
 }
 
 object IgnoreThenWrite extends SimpleChannelInboundHandler[Int] {
@@ -130,8 +150,6 @@ object IncrementOrPass extends ChannelInboundHandlerAdapter {
 
 object HttpResponder extends SimpleChannelInboundHandler[FullHttpRequest] {
   def channelRead0(ctx: ChannelHandlerContext, msg: FullHttpRequest): Unit = {
-    ReferenceCountUtil.release(msg)
-
     val res = new DefaultFullHttpResponse(
       HttpVersion.HTTP_1_1,
       HttpResponseStatus.OK)
@@ -145,8 +163,10 @@ object InboundNoopHandler extends SimpleChannelInboundHandler[AnyRef] {
 }
 
 object EchoHandler extends ChannelInboundHandlerAdapter {
-  override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit =
-    ctx.fireChannelRead(msg)
+  override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
+    println("echo handler sees " + msg)
+    ctx.writeAndFlush(msg)
+  }
 }
 
 object PrintHandler extends ChannelInboundHandler {
