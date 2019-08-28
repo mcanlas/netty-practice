@@ -34,7 +34,7 @@ class MinimalHttpEchoSpec extends FunSuite with Matchers with ScalaCheckDrivenPr
       val decodingChannel =
         new EmbeddedChannel(new HttpResponseDecoder, new HttpObjectAggregator(Int.MaxValue))
 
-      chn.outboundMessages().asScala.foreach { d =>
+      chn.outboundMessages().asScala.foreach { _ =>
         val bytePayload = chn.readOutbound[AnyRef]()
 
         assert(decodingChannel.writeInbound(bytePayload), "decoding channel inbound queue modified")
@@ -63,6 +63,8 @@ class StringHttpResponder(s: String) extends SimpleChannelInboundHandler[FullHtt
     res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
     res.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, res.content().readableBytes());
 
-    ctx.writeAndFlush(res)
+    forEffect {
+      ctx.writeAndFlush(res)
+    }
   }
 }

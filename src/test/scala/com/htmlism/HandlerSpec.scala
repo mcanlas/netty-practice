@@ -2,12 +2,10 @@ package com.htmlism
 
 import scala.jdk.CollectionConverters._
 
-import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandler.Sharable
-import io.netty.channel.{ ChannelHandlerAdapter, ChannelHandlerContext, ChannelInboundHandler, ChannelInboundHandlerAdapter, SimpleChannelInboundHandler }
+import io.netty.channel.{ ChannelHandlerContext, ChannelInboundHandler, ChannelInboundHandlerAdapter, SimpleChannelInboundHandler }
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
-import io.netty.util.ReferenceCountUtil
 import org.scalatest._
 
 object HandlerSpec {
@@ -142,19 +140,21 @@ class HandlerSpec extends FunSuite with Matchers {
 }
 
 object IgnoreThenWrite extends SimpleChannelInboundHandler[Int] {
-  override def channelRead0(ctx: ChannelHandlerContext, msg: Int): Unit = {
-//    ctx.fireChannelRead(msg)
-    ctx.writeAndFlush("hello " + msg.toString)
-  }
+  override def channelRead0(ctx: ChannelHandlerContext, msg: Int): Unit =
+    forEffect {
+      ctx.writeAndFlush("hello " + msg.toString)
+    }
 }
 
 object IncrementOrPass extends ChannelInboundHandlerAdapter {
   override def channelRead(ctx: ChannelHandlerContext, msg: Any): Unit =
-    msg match {
-      case n: Int =>
-        ctx.fireChannelRead(n + 1)
-      case _ =>
-        ctx.fireChannelRead(msg)
+    forEffect {
+      msg match {
+        case n: Int =>
+          ctx.fireChannelRead(n + 1)
+        case _ =>
+          ctx.fireChannelRead(msg)
+      }
     }
 }
 
@@ -165,7 +165,9 @@ object HttpResponder extends SimpleChannelInboundHandler[FullHttpRequest] {
       HttpVersion.HTTP_1_1,
       HttpResponseStatus.OK)
 
-    ctx.writeAndFlush(res)
+    forEffect {
+      ctx.writeAndFlush(res)
+    }
   }
 }
 
@@ -177,7 +179,10 @@ object InboundNoopHandler extends SimpleChannelInboundHandler[AnyRef] {
 object EchoHandler extends ChannelInboundHandlerAdapter {
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
     println("echo handler sees " + msg)
-    ctx.writeAndFlush(msg)
+
+    forEffect {
+      ctx.writeAndFlush(msg)
+    }
   }
 }
 
@@ -196,7 +201,10 @@ object PrintHandler extends ChannelInboundHandler {
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Any): Unit = {
     println("Channel read is happening: " + msg)
-    ctx.fireChannelRead(msg)
+
+    forEffect {
+      ctx.fireChannelRead(msg)
+    }
   }
 
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit =
