@@ -9,3 +9,10 @@ libraryDependencies += "org.typelevel" %% "cats-effect" % "2.0.0-RC2"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
+
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
+
+Test / testOptions +=
+      Tests.Argument(TestFrameworks.ScalaTest, "-oDF")

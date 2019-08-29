@@ -5,14 +5,17 @@ import java.nio.charset.Charset
 import scala.jdk.CollectionConverters._
 
 import io.netty.buffer.Unpooled
-import io.netty.channel.{ ChannelHandlerContext, SimpleChannelInboundHandler }
+import io.netty.channel._
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
 import org.scalacheck.{ Arbitrary, Gen }
+import org.scalactic.anyvals.PosInt
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class MinimalHttpEchoSpec extends FunSuite with Matchers with ScalaCheckDrivenPropertyChecks {
+  implicit val myConfig: PropertyCheckConfiguration = generatorDrivenConfig.copy(minSuccessful = PosInt(10000))
+
   implicit val safeStringArbitrary: Arbitrary[String] =
     Arbitrary(Gen.alphaStr)
 
