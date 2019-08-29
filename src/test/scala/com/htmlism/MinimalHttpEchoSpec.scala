@@ -2,8 +2,6 @@ package com.htmlism
 
 import java.nio.charset.Charset
 
-import scala.jdk.CollectionConverters._
-
 import io.netty.buffer.Unpooled
 import io.netty.channel._
 import io.netty.channel.embedded.EmbeddedChannel
@@ -12,6 +10,8 @@ import org.scalacheck.{ Arbitrary, Gen }
 import org.scalactic.anyvals.PosInt
 import org.scalatest._
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+
+import com.htmlism.syntax._
 
 class MinimalHttpEchoSpec extends FunSuite with Matchers with ScalaCheckDrivenPropertyChecks {
   implicit val myConfig: PropertyCheckConfiguration = generatorDrivenConfig.copy(minSuccessful = PosInt(10000))
@@ -34,22 +34,12 @@ class MinimalHttpEchoSpec extends FunSuite with Matchers with ScalaCheckDrivenPr
       assert(chn.inboundMessages().size == 0, "inbound queue is empty")
       assert(chn.outboundMessages().size > 0, "outbound queue is not empty")
 
-      val decodingChannel =
-        new EmbeddedChannel(new HttpResponseDecoder, new HttpObjectAggregator(Int.MaxValue))
-
-      chn.outboundMessages().asScala.foreach { _ =>
-        val bytePayload = chn.readOutbound[AnyRef]()
-
-        assert(decodingChannel.writeInbound(bytePayload), "decoding channel inbound queue modified")
-      }
-
-      assert(decodingChannel.inboundMessages().size == 1, "decoding channel inbound queue has one response")
-      assert(decodingChannel.outboundMessages().size == 0, "decoding channel outbound queue is empty")
-
-      decodingChannel
-        .readInbound[FullHttpResponse]
-        .content()
-        .toString(Charset.defaultCharset()) shouldBe s
+      chn
+        .safeReadInbound { res: FullHttpResponse =>
+          res
+            .content()
+            .toString(Charset.defaultCharset()) shouldBe s
+        }
     }
   }
 }
