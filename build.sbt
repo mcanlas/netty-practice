@@ -19,17 +19,4 @@ Test / testOptions +=
 
 lazy val docs = project
   .in(file("myproject-docs"))
-  .settings(
-    name := "hello",
-    description := "hello",
-    organizationName := "hello",
-   micrositeName := "Algebird",
-  micrositeDescription := "Abstract Algebra for Scala.",
-  micrositeAuthor := "Algebird's contributors",
-micrositeHighlightTheme := "atom-one-light",
-  micrositeHomepage := "https://twitter.github.io/algebird",
-  micrositeBaseUrl := "algebird",
-  micrositeDocumentationUrl := "api",
-  micrositeGithubOwner := "twitter",
-  )
   .enablePlugins(MicrositesPlugin)
