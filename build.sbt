@@ -16,3 +16,20 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 Test / testOptions +=
       Tests.Argument(TestFrameworks.ScalaTest, "-oDF")
+
+lazy val docs = project
+  .in(file("myproject-docs"))
+  .settings(
+    name := "hello",
+    description := "hello",
+    organizationName := "hello",
+   micrositeName := "Algebird",
+  micrositeDescription := "Abstract Algebra for Scala.",
+  micrositeAuthor := "Algebird's contributors",
+micrositeHighlightTheme := "atom-one-light",
+  micrositeHomepage := "https://twitter.github.io/algebird",
+  micrositeBaseUrl := "algebird",
+  micrositeDocumentationUrl := "api",
+  micrositeGithubOwner := "twitter",
+  )
+  .enablePlugins(MicrositesPlugin)
