@@ -38,8 +38,8 @@ object Server extends IOApp {
 object Hello {
   private def shutdownGracefully[F[_]](g: EventExecutorGroup)(implicit F: Sync[F]) =
     F.delay {
-      println("shutting down")
-      g.shutdownGracefully()
+      println("shutting down synchronously")
+      g.shutdownGracefully().sync()
     }.void
 
 
