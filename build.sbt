@@ -8,7 +8,7 @@ libraryDependencies += "org.typelevel" %% "cats-effect" % "2.0.0"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Configurations.Test
 
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.2" % Configurations.Test
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3" % Configurations.Test
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 
