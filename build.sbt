@@ -2,7 +2,7 @@ scalaVersion := "2.13.1"
 
 javaOptions += "-Dio.netty.leakDetectionLevel=PARANOID"
 
-libraryDependencies += "io.netty" % "netty-all" % "4.1.44.Final"
+libraryDependencies += "io.netty" % "netty-all" % "4.1.45.Final"
 
 libraryDependencies += "org.typelevel" %% "cats-effect" % "2.0.0"
 
