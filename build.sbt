@@ -4,7 +4,7 @@ javaOptions += "-Dio.netty.leakDetectionLevel=PARANOID"
 
 libraryDependencies += "io.netty" % "netty-all" % "4.1.45.Final"
 
-libraryDependencies += "org.typelevel" %% "cats-effect" % "2.0.0"
+libraryDependencies += "org.typelevel" %% "cats-effect" % "2.1.2"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Configurations.Test
 
